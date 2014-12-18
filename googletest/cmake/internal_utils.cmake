@@ -51,6 +51,11 @@ macro(config_compiler_and_linker)
     find_package(Threads)
   endif()
 
+  if(NOT gtest_disable_mpi)
+    # Defines MPI_COMPILE_FLAGS, MPI_INCLUDE_PATH, MPI_LINK_FLAGS and MPI_LIBRARIES
+    find_package(MPI)
+  endif()
+
   fix_default_compiler_settings_()
   if (MSVC)
     # Newlines inside flags variables break CMake's NMake generator.
@@ -129,6 +134,13 @@ macro(config_compiler_and_linker)
     set(cxx_base_flags "${cxx_base_flags} -DGTEST_HAS_PTHREAD=0")
   endif()
 
+  if(NOT gtest_disable_mpi)
+    set(cxx_base_flags "${cxx_base_flags} -DGTEST_HAS_MPI=1")
+    set(cxx_base_flags "${cxx_base_flags} ${MPI_COMPILE_FLAGS} ${MPI_LINK_FLAGS}")
+  else()
+    set(cxx_base_flags "${cxx_base_flags} -DGTEST_HAS_MPI=0")
+  endif()
+
   # For building gtest's own tests and samples.
   set(cxx_exception "${CMAKE_CXX_FLAGS} ${cxx_base_flags} ${cxx_exception_flags}")
   set(cxx_no_exception
@@ -157,6 +169,9 @@ function(cxx_library_with_type name type cxx_flags)
   endif()
   if (CMAKE_USE_PTHREADS_INIT)
     target_link_libraries(${name} ${CMAKE_THREAD_LIBS_INIT})
+  endif()
+  if(NOT gtest_disable_mpi)
+    target_link_libraries(${name} ${MPI_LIBRARIES})
   endif()
 endfunction()
 
@@ -215,6 +230,14 @@ find_package(PythonInterp)
 function(cxx_test_with_flags name cxx_flags libs)
   cxx_executable_with_flags(${name} "${cxx_flags}" "${libs}" ${ARGN})
   add_test(${name} ${name})
+
+  # add mpi variants of this tests
+  if(NOT gtest_disable_mpi)
+    foreach(np 1 2 3 6)
+      add_test("${name}_np${np}" ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${name} ${MPIEXEC_POSTFLAGS})
+      set_tests_properties("${name}_np${np}" PROPERTIES TIMEOUT 60)
+    endforeach()
+  endif()
 endfunction()
 
 # cxx_test(name libs srcs...)

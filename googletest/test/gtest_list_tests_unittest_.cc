@@ -151,7 +151,15 @@ REGISTER_TYPED_TEST_CASE_P(TypeParamTest, TestA, TestB);
 INSTANTIATE_TYPED_TEST_CASE_P(My, TypeParamTest, MyTypes);
 
 int main(int argc, char **argv) {
+#if GTEST_HAS_MPI
+  MPI_Init(&argc, &argv);
+#endif
   ::testing::InitGoogleTest(&argc, argv);
 
-  return RUN_ALL_TESTS();
+  int result = RUN_ALL_TESTS();
+
+#if GTEST_HAS_MPI
+  MPI_Finalize();
+#endif
+  return result;
 }

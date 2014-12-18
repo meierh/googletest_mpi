@@ -32,6 +32,10 @@
 // Tests that Google Test manipulates the premature-exit-detection
 // file correctly.
 
+#if GTEST_HAS_MPI
+#include <mpi.h>
+#endif
+
 #include <stdio.h>
 
 #include "gtest/gtest.h"
@@ -108,6 +112,9 @@ TEST_F(PrematureExitTest, PrematureExitFileExistsDuringTestExecution) {
 }  // namespace
 
 int main(int argc, char **argv) {
+#if GTEST_HAS_MPI
+  MPI_Init(&argc, &argv);
+#endif
   InitGoogleTest(&argc, argv);
   const int exit_code = RUN_ALL_TESTS();
 
@@ -123,5 +130,8 @@ int main(int argc, char **argv) {
     }
   }
 
+#if GTEST_HAS_MPI
+  MPI_Finalize();
+#endif
   return exit_code;
 }

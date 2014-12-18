@@ -1034,6 +1034,9 @@ TEST(CompileTest, CombineIsDefinedOnlyWhenGtestHasParamTestIsDefined) {
 }
 
 int main(int argc, char **argv) {
+#if GTEST_HAS_MPI
+  MPI_Init(&argc, &argv);
+#endif
 #if GTEST_HAS_PARAM_TEST
   // Used in TestGenerationTest test case.
   AddGlobalTestEnvironment(TestGenerationTest::Environment::Instance());
@@ -1051,5 +1054,10 @@ int main(int argc, char **argv) {
   GeneratorEvaluationTest::set_param_value(2);
 #endif  // GTEST_HAS_PARAM_TEST
 
-  return RUN_ALL_TESTS();
+  int result = RUN_ALL_TESTS();
+
+#if GTEST_HAS_MPI
+  MPI_Finalize();
+#endif
+  return result;
 }

@@ -79,6 +79,9 @@ void TestFailureThrowsRuntimeError() {
 }
 
 int main(int argc, char** argv) {
+#if GTEST_HAS_MPI
+  MPI_Init(&argc, &argv);
+#endif
   testing::InitGoogleTest(&argc, argv);
 
   // We want to ensure that people can use Google Test assertions in
@@ -88,5 +91,9 @@ int main(int argc, char** argv) {
   // (e.g. TEST and RUN_ALL_TESTS) here.
 
   TestFailureThrowsRuntimeError();
+
+#if GTEST_HAS_MPI
+  MPI_Finalize();
+#endif
   return 0;
 }

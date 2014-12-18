@@ -82,6 +82,8 @@
 //                              expressions are/aren't available.
 //   GTEST_HAS_PTHREAD        - Define it to 1/0 to indicate that <pthread.h>
 //                              is/isn't available.
+//   GTEST_HAS_MPI            - Define it to 1/0 to indicate that <mpi.h>
+//                              is/isn't available.
 //   GTEST_HAS_RTTI           - Define it to 1/0 to indicate that RTTI is/isn't
 //                              enabled.
 //   GTEST_HAS_STD_WSTRING    - Define it to 1/0 to indicate that
@@ -255,6 +257,14 @@
 //   BoolFromGTestEnv()   - parses a bool environment variable.
 //   Int32FromGTestEnv()  - parses an Int32 environment variable.
 //   StringFromGTestEnv() - parses a string environment variable.
+
+#if GTEST_HAS_MPI
+// gtest-port.h guarantees to #include <mpi.h> when GTEST_HAS_MPI is
+// true.
+// Some MPI vendors require this include to be the *first* include
+// (e.g. before system headers!)
+#include <mpi.h> //NOLINT
+#endif
 
 #include <ctype.h>   // for isspace, etc
 #include <stddef.h>  // for ptrdiff_t
@@ -791,7 +801,10 @@ using ::std::tuple_size;
      (GTEST_OS_WINDOWS_DESKTOP && _MSC_VER >= 1400) || \
      GTEST_OS_WINDOWS_MINGW || GTEST_OS_AIX || GTEST_OS_HPUX || \
      GTEST_OS_OPENBSD || GTEST_OS_QNX || GTEST_OS_FREEBSD)
+# if !GTEST_HAS_MPI
+// The usage of fork in an MPI process is not standardized and probably not supported.
 # define GTEST_HAS_DEATH_TEST 1
+# endif
 #endif
 
 // We don't support MSVC 7.1 with exceptions disabled now.  Therefore

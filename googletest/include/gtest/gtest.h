@@ -51,6 +51,11 @@
 #ifndef GTEST_INCLUDE_GTEST_GTEST_H_
 #define GTEST_INCLUDE_GTEST_GTEST_H_
 
+#if GTEST_HAS_MPI
+// Some MPI vendors require the mpi.h to be included before anything else.
+#include <mpi.h>
+#endif
+
 #include <limits>
 #include <ostream>
 #include <vector>
