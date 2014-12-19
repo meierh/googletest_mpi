@@ -275,11 +275,16 @@ class GTEST_API_ AssertionResult {
   // we want AssertionResult's copy constructor to be used.
   template <typename T>
   explicit AssertionResult(
-      const T& success,
+      const T& success, bool global = true,
       typename internal::EnableIf<
           !internal::ImplicitlyConvertible<T, AssertionResult>::value>::type*
           /*enabler*/ = NULL)
-      : success_(success) {}
+      : success_(success), globalResultsDiffer_(false) {
+#if GTEST_HAS_MPI
+        if( global )
+          globalResultsDiffer_ = !boolIdenticalOnMPIprocs(success_);
+#endif
+      }
 
   GTEST_DISABLE_MSC_WARNINGS_POP_()
 
@@ -290,7 +295,7 @@ class GTEST_API_ AssertionResult {
   }
 
   // Returns true iff the assertion succeeded.
-  operator bool() const { return success_; }  // NOLINT
+  operator bool() const { return success_ && !globalResultsDiffer_; } // NOLINT
 
   // Returns the assertion's negation. Used with EXPECT/ASSERT_FALSE.
   AssertionResult operator!() const;
@@ -320,7 +325,7 @@ class GTEST_API_ AssertionResult {
     return *this;
   }
 
- private:
+ protected:
   // Appends the contents of message to message_.
   void AppendMessage(const Message& a_message) {
     if (message_.get() == NULL)
@@ -331,8 +336,13 @@ class GTEST_API_ AssertionResult {
   // Swap the contents of this AssertionResult with other.
   void swap(AssertionResult& other);
 
+  // checks that all MPI processes have the same v
+  static bool boolIdenticalOnMPIprocs(bool v);
+
   // Stores result of the assertion predicate.
   bool success_;
+  // Used tom mark different results on different processes as failure
+  bool globalResultsDiffer_;
   // Stores the message describing the condition in case the expectation
   // construct is not satisfied with the predicate's outcome.
   // Referenced via a pointer to avoid taking too much stack frame space

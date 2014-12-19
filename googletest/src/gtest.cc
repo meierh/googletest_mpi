@@ -329,6 +329,10 @@ UInt32 Random::Generate(UInt32 range) {
 // Google Test before calling RUN_ALL_TESTS().
 static bool GTestIsInitialized() { return GetArgvs().size() > 0; }
 
+#ifdef GTEST_HAS_MPI
+MPI_Comm GTEST_MPI_COMM_WORLD = MPI_COMM_WORLD;
+#endif
+
 // Iterates over a vector of TestCases, keeping a running sum of the
 // results of calling a given int-returning method on each.
 // Returns the sum.
@@ -985,7 +989,7 @@ std::string Message::GetString() const {
 // AssertionResult constructors.
 // Used in EXPECT_TRUE/FALSE(assertion_result).
 AssertionResult::AssertionResult(const AssertionResult& other)
-    : success_(other.success_),
+    : success_(other.success_), globalResultsDiffer_(other.globalResultsDiffer_),
       message_(other.message_.get() != NULL ?
                new ::std::string(*other.message_) :
                static_cast< ::std::string*>(NULL)) {
@@ -995,12 +999,36 @@ AssertionResult::AssertionResult(const AssertionResult& other)
 void AssertionResult::swap(AssertionResult& other) {
   using std::swap;
   swap(success_, other.success_);
+  swap(globalResultsDiffer_, other.globalResultsDiffer_);
   swap(message_, other.message_);
+}
+
+// checks that all MPI processes have the same v
+bool AssertionResult::boolIdenticalOnMPIprocs(bool v)
+{
+#ifdef GTEST_HAS_MPI
+  int localSuccess = v;
+  int globalAndV, globalOrV;
+  bool mpiErr = false;
+  mpiErr = mpiErr || (MPI_Allreduce(&localSuccess, &globalAndV, 1, MPI_INT, MPI_LAND, internal::GTEST_MPI_COMM_WORLD) != MPI_SUCCESS);
+  mpiErr = mpiErr || (MPI_Allreduce(&localSuccess, &globalOrV, 1, MPI_INT, MPI_LOR, internal::GTEST_MPI_COMM_WORLD) != MPI_SUCCESS);
+  if( mpiErr )
+  {
+      GTEST_LOG_(ERROR)
+        << "Error in MPI_Allreduce (should return MPI_SUCCESS)!";
+      return false;
+  }
+  else
+  {
+    return globalAndV == globalOrV;
+  }
+#endif
 }
 
 // Returns the assertion's negation. Used with EXPECT/ASSERT_FALSE.
 AssertionResult AssertionResult::operator!() const {
-  AssertionResult negation(!success_);
+  AssertionResult negation(!success_, false);
+  negation.globalResultsDiffer_ = globalResultsDiffer_;
   if (message_.get() != NULL)
     negation << *message_;
   return negation;
@@ -3863,7 +3891,7 @@ class ScopedPrematureExitFile {
 #if GTEST_HAS_MPI
     // We need to verify that MPI was initialized here...
     if (GTestIsInitialized()) {
-      if( MPI_Comm_rank(MPI_COMM_WORLD, &rank_) != MPI_SUCCESS) {
+      if( MPI_Comm_rank(GTEST_MPI_COMM_WORLD, &rank_) != MPI_SUCCESS) {
         GTEST_LOG_(ERROR)
           << "Error MPI_Comm_rank should return MPI_SUCCESS.";
       }
@@ -4693,6 +4721,15 @@ bool UnitTestImpl::RunAllTests() {
 
   repeater->OnTestProgramEnd(*parent_);
 
+#if GTEST_HAS_MPI
+  // delete our communicator
+  if (GTEST_MPI_COMM_WORLD != MPI_COMM_WORLD)
+  {
+    MPI_Comm_free(&GTEST_MPI_COMM_WORLD);
+    GTEST_MPI_COMM_WORLD = MPI_COMM_WORLD;
+  }
+#endif
+
   return !failed;
 }
 
@@ -4703,7 +4740,7 @@ bool UnitTestImpl::RunAllTests() {
 void WriteToShardStatusFileIfNeeded() {
   int rank = 0;
 #if GTEST_HAS_MPI
-  if( MPI_Comm_rank(MPI_COMM_WORLD, &rank) != MPI_SUCCESS) {
+  if( MPI_Comm_rank(GTEST_MPI_COMM_WORLD, &rank) != MPI_SUCCESS) {
     GTEST_LOG_(ERROR)
       << "Error MPI_Comm_rank should return MPI_SUCCESS.";
   }
@@ -5273,7 +5310,7 @@ void LoadFlagsFromFile(const std::string& path) {
   std::string contents;
 #if GTEST_HAS_MPI
   int rank = 0;
-  if( MPI_Comm_rank(MPI_COMM_WORLD, &rank) != MPI_SUCCESS) {
+  if( MPI_Comm_rank(GTEST_MPI_COMM_WORLD, &rank) != MPI_SUCCESS) {
     GTEST_LOG_(ERROR)
       << "Error MPI_Comm_rank should return MPI_SUCCESS.";
   }
@@ -5293,12 +5330,12 @@ void LoadFlagsFromFile(const std::string& path) {
   }
   // broadcast data because view on file system might be inconsistant
   int contents_size = contents.size();
-  MPI_Bcast(&contents_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&contents_size, 1, MPI_INT, 0, GTEST_MPI_COMM_WORLD);
   if( rank == 0 ) {
-    MPI_Bcast((void*)contents.data(), contents_size, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast((void*)contents.data(), contents_size, MPI_CHAR, 0, GTEST_MPI_COMM_WORLD);
   } else {
     char* const contents_buffer = new char[contents_size];
-    MPI_Bcast(contents_buffer, contents_size, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(contents_buffer, contents_size, MPI_CHAR, 0, GTEST_MPI_COMM_WORLD);
     contents = std::string(contents_buffer,contents_size);
     delete[] contents_buffer;
   }
@@ -5390,9 +5427,9 @@ void InitGoogleTestImpl(int* argc, CharType** argv) {
   if (*argc <= 0) return;
 
 #if GTEST_HAS_MPI
+  // check that MPI is initialized
   int flag = 0;
-  int ierr = MPI_Initialized(&flag);
-  if( ierr != 0 )
+  if( MPI_Initialized(&flag) != MPI_SUCCESS )
   {
     GTEST_LOG_(ERROR)
       << "Error calling MPI_Initialized in InitGoogleTest, aborting...";
@@ -5402,6 +5439,14 @@ void InitGoogleTestImpl(int* argc, CharType** argv) {
   {
     GTEST_LOG_(ERROR)
       << "You need to call MPI_Init or MPI_Init_thread before InitGoogleTest, aborting...";
+    return;
+  }
+
+  // generate own communicator
+  if( MPI_Comm_dup(MPI_COMM_WORLD, &GTEST_MPI_COMM_WORLD) != MPI_SUCCESS )
+  {
+    GTEST_LOG_(ERROR)
+      << "Error creating MPI communicator in InitGoogleTest, aborting...";
     return;
   }
 #endif // GTEST_HAS_MPI
