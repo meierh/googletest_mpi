@@ -57,21 +57,21 @@ if SUPPORTS_STACK_TRACES:
 else:
   STACK_TRACE_TEMPLATE = ''
 
-EXPECTED_NON_EMPTY_XML = """<?xml version="1.0" encoding="UTF-8"?>
-<testsuites tests="23" failures="4" disabled="2" errors="0" time="*" timestamp="*" name="AllTests" ad_hoc_property="42">
-  <testsuite name="SuccessfulTest" tests="1" failures="0" disabled="0" errors="0" time="*">
-    <testcase name="Succeeds" status="run" time="*" classname="SuccessfulTest"/>
+EXPECTED_NON_EMPTY_XML_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="23" failures="4" disabled="2" errors="0" time="*" timestamp="*" name="%(testsuites_name)s" ad_hoc_property="42">
+  <testsuite name="%(testsuites_name)s.SuccessfulTest" tests="1" failures="0" disabled="0" errors="0" time="*">
+    <testcase name="Succeeds" status="run" time="*" classname="%(testsuites_name)s.SuccessfulTest"/>
   </testsuite>
-  <testsuite name="FailedTest" tests="1" failures="1" disabled="0" errors="0" time="*">
-    <testcase name="Fails" status="run" time="*" classname="FailedTest">
+  <testsuite name="%(testsuites_name)s.FailedTest" tests="1" failures="1" disabled="0" errors="0" time="*">
+    <testcase name="Fails" status="run" time="*" classname="%(testsuites_name)s.FailedTest">
       <failure message="gtest_xml_output_unittest_.cc:*&#x0A;      Expected: 1&#x0A;To be equal to: 2" type=""><![CDATA[gtest_xml_output_unittest_.cc:*
       Expected: 1
 To be equal to: 2%(stack)s]]></failure>
     </testcase>
   </testsuite>
-  <testsuite name="MixedResultTest" tests="3" failures="1" disabled="1" errors="0" time="*">
-    <testcase name="Succeeds" status="run" time="*" classname="MixedResultTest"/>
-    <testcase name="Fails" status="run" time="*" classname="MixedResultTest">
+  <testsuite name="%(testsuites_name)s.MixedResultTest" tests="3" failures="1" disabled="1" errors="0" time="*">
+    <testcase name="Succeeds" status="run" time="*" classname="%(testsuites_name)s.MixedResultTest"/>
+    <testcase name="Fails" status="run" time="*" classname="%(testsuites_name)s.MixedResultTest">
       <failure message="gtest_xml_output_unittest_.cc:*&#x0A;      Expected: 1&#x0A;To be equal to: 2" type=""><![CDATA[gtest_xml_output_unittest_.cc:*
       Expected: 1
 To be equal to: 2%(stack)s]]></failure>
@@ -79,68 +79,84 @@ To be equal to: 2%(stack)s]]></failure>
       Expected: 2
 To be equal to: 3%(stack)s]]></failure>
     </testcase>
-    <testcase name="DISABLED_test" status="notrun" time="*" classname="MixedResultTest"/>
+    <testcase name="DISABLED_test" status="notrun" time="*" classname="%(testsuites_name)s.MixedResultTest"/>
   </testsuite>
-  <testsuite name="XmlQuotingTest" tests="1" failures="1" disabled="0" errors="0" time="*">
-    <testcase name="OutputsCData" status="run" time="*" classname="XmlQuotingTest">
+  <testsuite name="%(testsuites_name)s.XmlQuotingTest" tests="1" failures="1" disabled="0" errors="0" time="*">
+    <testcase name="OutputsCData" status="run" time="*" classname="%(testsuites_name)s.XmlQuotingTest">
       <failure message="gtest_xml_output_unittest_.cc:*&#x0A;Failed&#x0A;XML output: &lt;?xml encoding=&quot;utf-8&quot;&gt;&lt;top&gt;&lt;![CDATA[cdata text]]&gt;&lt;/top&gt;" type=""><![CDATA[gtest_xml_output_unittest_.cc:*
 Failed
 XML output: <?xml encoding="utf-8"><top><![CDATA[cdata text]]>]]&gt;<![CDATA[</top>%(stack)s]]></failure>
     </testcase>
   </testsuite>
-  <testsuite name="InvalidCharactersTest" tests="1" failures="1" disabled="0" errors="0" time="*">
-    <testcase name="InvalidCharactersInMessage" status="run" time="*" classname="InvalidCharactersTest">
+  <testsuite name="%(testsuites_name)s.InvalidCharactersTest" tests="1" failures="1" disabled="0" errors="0" time="*">
+    <testcase name="InvalidCharactersInMessage" status="run" time="*" classname="%(testsuites_name)s.InvalidCharactersTest">
       <failure message="gtest_xml_output_unittest_.cc:*&#x0A;Failed&#x0A;Invalid characters in brackets []" type=""><![CDATA[gtest_xml_output_unittest_.cc:*
 Failed
 Invalid characters in brackets []%(stack)s]]></failure>
     </testcase>
   </testsuite>
-  <testsuite name="DisabledTest" tests="1" failures="0" disabled="1" errors="0" time="*">
-    <testcase name="DISABLED_test_not_run" status="notrun" time="*" classname="DisabledTest"/>
+  <testsuite name="%(testsuites_name)s.DisabledTest" tests="1" failures="0" disabled="1" errors="0" time="*">
+    <testcase name="DISABLED_test_not_run" status="notrun" time="*" classname="%(testsuites_name)s.DisabledTest"/>
   </testsuite>
-  <testsuite name="PropertyRecordingTest" tests="4" failures="0" disabled="0" errors="0" time="*" SetUpTestCase="yes" TearDownTestCase="aye">
-    <testcase name="OneProperty" status="run" time="*" classname="PropertyRecordingTest" key_1="1"/>
-    <testcase name="IntValuedProperty" status="run" time="*" classname="PropertyRecordingTest" key_int="1"/>
-    <testcase name="ThreeProperties" status="run" time="*" classname="PropertyRecordingTest" key_1="1" key_2="2" key_3="3"/>
-    <testcase name="TwoValuesForOneKeyUsesLastValue" status="run" time="*" classname="PropertyRecordingTest" key_1="2"/>
+  <testsuite name="%(testsuites_name)s.PropertyRecordingTest" tests="4" failures="0" disabled="0" errors="0" time="*" SetUpTestCase="yes" TearDownTestCase="aye">
+    <testcase name="OneProperty" status="run" time="*" classname="%(testsuites_name)s.PropertyRecordingTest" key_1="1"/>
+    <testcase name="IntValuedProperty" status="run" time="*" classname="%(testsuites_name)s.PropertyRecordingTest" key_int="1"/>
+    <testcase name="ThreeProperties" status="run" time="*" classname="%(testsuites_name)s.PropertyRecordingTest" key_1="1" key_2="2" key_3="3"/>
+    <testcase name="TwoValuesForOneKeyUsesLastValue" status="run" time="*" classname="%(testsuites_name)s.PropertyRecordingTest" key_1="2"/>
   </testsuite>
-  <testsuite name="NoFixtureTest" tests="3" failures="0" disabled="0" errors="0" time="*">
-     <testcase name="RecordProperty" status="run" time="*" classname="NoFixtureTest" key="1"/>
-     <testcase name="ExternalUtilityThatCallsRecordIntValuedProperty" status="run" time="*" classname="NoFixtureTest" key_for_utility_int="1"/>
-     <testcase name="ExternalUtilityThatCallsRecordStringValuedProperty" status="run" time="*" classname="NoFixtureTest" key_for_utility_string="1"/>
+  <testsuite name="%(testsuites_name)s.NoFixtureTest" tests="3" failures="0" disabled="0" errors="0" time="*">
+     <testcase name="RecordProperty" status="run" time="*" classname="%(testsuites_name)s.NoFixtureTest" key="1"/>
+     <testcase name="ExternalUtilityThatCallsRecordIntValuedProperty" status="run" time="*" classname="%(testsuites_name)s.NoFixtureTest" key_for_utility_int="1"/>
+     <testcase name="ExternalUtilityThatCallsRecordStringValuedProperty" status="run" time="*" classname="%(testsuites_name)s.NoFixtureTest" key_for_utility_string="1"/>
   </testsuite>
-  <testsuite name="Single/ValueParamTest" tests="4" failures="0" disabled="0" errors="0" time="*">
-    <testcase name="HasValueParamAttribute/0" value_param="33" status="run" time="*" classname="Single/ValueParamTest" />
-    <testcase name="HasValueParamAttribute/1" value_param="42" status="run" time="*" classname="Single/ValueParamTest" />
-    <testcase name="AnotherTestThatHasValueParamAttribute/0" value_param="33" status="run" time="*" classname="Single/ValueParamTest" />
-    <testcase name="AnotherTestThatHasValueParamAttribute/1" value_param="42" status="run" time="*" classname="Single/ValueParamTest" />
+  <testsuite name="%(testsuites_name)s.Single/ValueParamTest" tests="4" failures="0" disabled="0" errors="0" time="*">
+    <testcase name="HasValueParamAttribute/0" value_param="33" status="run" time="*" classname="%(testsuites_name)s.Single/ValueParamTest" />
+    <testcase name="HasValueParamAttribute/1" value_param="42" status="run" time="*" classname="%(testsuites_name)s.Single/ValueParamTest" />
+    <testcase name="AnotherTestThatHasValueParamAttribute/0" value_param="33" status="run" time="*" classname="%(testsuites_name)s.Single/ValueParamTest" />
+    <testcase name="AnotherTestThatHasValueParamAttribute/1" value_param="42" status="run" time="*" classname="%(testsuites_name)s.Single/ValueParamTest" />
   </testsuite>
-  <testsuite name="TypedTest/0" tests="1" failures="0" disabled="0" errors="0" time="*">
-    <testcase name="HasTypeParamAttribute" type_param="*" status="run" time="*" classname="TypedTest/0" />
+  <testsuite name="%(testsuites_name)s.TypedTest/0" tests="1" failures="0" disabled="0" errors="0" time="*">
+    <testcase name="HasTypeParamAttribute" type_param="*" status="run" time="*" classname="%(testsuites_name)s.TypedTest/0" />
   </testsuite>
-  <testsuite name="TypedTest/1" tests="1" failures="0" disabled="0" errors="0" time="*">
-    <testcase name="HasTypeParamAttribute" type_param="*" status="run" time="*" classname="TypedTest/1" />
+  <testsuite name="%(testsuites_name)s.TypedTest/1" tests="1" failures="0" disabled="0" errors="0" time="*">
+    <testcase name="HasTypeParamAttribute" type_param="*" status="run" time="*" classname="%(testsuites_name)s.TypedTest/1" />
   </testsuite>
-  <testsuite name="Single/TypeParameterizedTestCase/0" tests="1" failures="0" disabled="0" errors="0" time="*">
-    <testcase name="HasTypeParamAttribute" type_param="*" status="run" time="*" classname="Single/TypeParameterizedTestCase/0" />
+  <testsuite name="%(testsuites_name)s.Single/TypeParameterizedTestCase/0" tests="1" failures="0" disabled="0" errors="0" time="*">
+    <testcase name="HasTypeParamAttribute" type_param="*" status="run" time="*" classname="%(testsuites_name)s.Single/TypeParameterizedTestCase/0" />
   </testsuite>
-  <testsuite name="Single/TypeParameterizedTestCase/1" tests="1" failures="0" disabled="0" errors="0" time="*">
-    <testcase name="HasTypeParamAttribute" type_param="*" status="run" time="*" classname="Single/TypeParameterizedTestCase/1" />
-  </testsuite>
-</testsuites>""" % {'stack': STACK_TRACE_TEMPLATE}
-
-EXPECTED_FILTERED_TEST_XML = """<?xml version="1.0" encoding="UTF-8"?>
-<testsuites tests="1" failures="0" disabled="0" errors="0" time="*"
-            timestamp="*" name="AllTests" ad_hoc_property="42">
-  <testsuite name="SuccessfulTest" tests="1" failures="0" disabled="0"
-             errors="0" time="*">
-    <testcase name="Succeeds" status="run" time="*" classname="SuccessfulTest"/>
+  <testsuite name="%(testsuites_name)s.Single/TypeParameterizedTestCase/1" tests="1" failures="0" disabled="0" errors="0" time="*">
+    <testcase name="HasTypeParamAttribute" type_param="*" status="run" time="*" classname="%(testsuites_name)s.Single/TypeParameterizedTestCase/1" />
   </testsuite>
 </testsuites>"""
 
+EXPECTED_NON_EMPTY_XML = EXPECTED_NON_EMPTY_XML_TEMPLATE % {'stack': STACK_TRACE_TEMPLATE, 'testsuites_name': 'gtest_xml_output_unittest_'}
+EXPECTED_NON_EMPTY_XML_MPI = EXPECTED_NON_EMPTY_XML_TEMPLATE % {'stack': STACK_TRACE_TEMPLATE, 'testsuites_name': 'gtest_xml_output_unittest__np1'}
+
+EXPECTED_FILTERED_TEST_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" failures="0" disabled="0" errors="0" time="*"
+            timestamp="*" name="gtest_xml_output_unittest_" ad_hoc_property="42">
+  <testsuite name="gtest_xml_output_unittest_.SuccessfulTest" tests="1" failures="0" disabled="0"
+             errors="0" time="*">
+    <testcase name="Succeeds" status="run" time="*" classname="gtest_xml_output_unittest_.SuccessfulTest"/>
+  </testsuite>
+</testsuites>"""
+
+EXPECTED_FILTERED_TEST_XML_MPI = """<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" failures="0" disabled="0" errors="0" time="*"
+            timestamp="*" name="gtest_xml_output_unittest__np1" ad_hoc_property="42">
+  <testsuite name="gtest_xml_output_unittest__np1.SuccessfulTest" tests="1" failures="0" disabled="0"
+             errors="0" time="*">
+    <testcase name="Succeeds" status="run" time="*" classname="gtest_xml_output_unittest__np1.SuccessfulTest"/>
+  </testsuite>
+</testsuites>"""
 EXPECTED_EMPTY_XML = """<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="0" failures="0" disabled="0" errors="0" time="*"
-            timestamp="*" name="AllTests">
+            timestamp="*" name="gtest_no_test_unittest">
+</testsuites>"""
+
+EXPECTED_EMPTY_XML_MPI = """<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="0" failures="0" disabled="0" errors="0" time="*"
+            timestamp="*" name="gtest_no_test_unittest_np1">
 </testsuites>"""
 
 GTEST_PROGRAM_PATH = gtest_test_utils.GetTestExecutablePath(GTEST_PROGRAM_NAME)
@@ -162,7 +178,7 @@ class GTestXMLOutputUnitTest(gtest_xml_test_utils.GTestXMLTestCase):
       Runs a test program that generates a non-empty XML output, and
       tests that the XML output is expected.
       """
-      self._TestXmlOutput(GTEST_PROGRAM_NAME, EXPECTED_NON_EMPTY_XML, 1)
+      self._TestXmlOutput(GTEST_PROGRAM_NAME, EXPECTED_NON_EMPTY_XML, EXPECTED_NON_EMPTY_XML_MPI, 1)
 
   def testEmptyXmlOutput(self):
     """Verifies XML output for a Google Test binary without actual tests.
@@ -171,7 +187,7 @@ class GTestXMLOutputUnitTest(gtest_xml_test_utils.GTestXMLTestCase):
     tests that the XML output is expected.
     """
 
-    self._TestXmlOutput('gtest_no_test_unittest', EXPECTED_EMPTY_XML, 0)
+    self._TestXmlOutput('gtest_no_test_unittest', EXPECTED_EMPTY_XML, EXPECTED_EMPTY_XML_MPI, 0)
 
   def testTimestampValue(self):
     """Checks whether the timestamp attribute in the XML output is valid.
@@ -257,7 +273,7 @@ class GTestXMLOutputUnitTest(gtest_xml_test_utils.GTestXMLTestCase):
     non-selected tests do not show up in the XML output.
     """
 
-    self._TestXmlOutput(GTEST_PROGRAM_NAME, EXPECTED_FILTERED_TEST_XML, 0,
+    self._TestXmlOutput(GTEST_PROGRAM_NAME, EXPECTED_FILTERED_TEST_XML, EXPECTED_FILTERED_TEST_XML_MPI, 0,
                         extra_args=['%s=SuccessfulTest.*' % GTEST_FILTER_FLAG])
 
   def _GetXmlOutput(self, gtest_prog_name, extra_args, expected_exit_code):
@@ -284,7 +300,7 @@ class GTestXMLOutputUnitTest(gtest_xml_test_utils.GTestXMLTestCase):
     actual = minidom.parse(xml_path)
     return actual
 
-  def _TestXmlOutput(self, gtest_prog_name, expected_xml,
+  def _TestXmlOutput(self, gtest_prog_name, expected_xml, expected_xml_alt,
                      expected_exit_code, extra_args=None):
     """
     Asserts that the XML document generated by running the program
@@ -296,9 +312,15 @@ class GTestXMLOutputUnitTest(gtest_xml_test_utils.GTestXMLTestCase):
     actual = self._GetXmlOutput(gtest_prog_name, extra_args or [],
                                 expected_exit_code)
     expected = minidom.parseString(expected_xml)
+    expected_alt = minidom.parseString(expected_xml_alt)
     self.NormalizeXml(actual.documentElement)
-    self.AssertEquivalentNodes(expected.documentElement,
-                               actual.documentElement)
+    try:
+        self.AssertEquivalentNodes(expected.documentElement,
+                                   actual.documentElement)
+    except AssertionError:
+        self.AssertEquivalentNodes(expected_alt.documentElement,
+                                   actual.documentElement)
+
     expected.unlink()
     actual.unlink()
 

@@ -1443,14 +1443,14 @@ GTEST_API_ std::string ReadEntireFile(FILE* file);
 // All command line arguments.
 GTEST_API_ const ::std::vector<testing::internal::string>& GetArgvs();
 
-#if GTEST_HAS_DEATH_TEST
+#if GTEST_HAS_DEATH_TEST || GTEST_HAS_MPI
 
 const ::std::vector<testing::internal::string>& GetInjectableArgvs();
 void SetInjectableArgvs(const ::std::vector<testing::internal::string>*
                              new_argvs);
 
 
-#endif  // GTEST_HAS_DEATH_TEST
+#endif  // GTEST_HAS_DEATH_TEST || GTEST_HAS_MPI
 
 // Defines synchronization primitives.
 #if GTEST_IS_THREADSAFE

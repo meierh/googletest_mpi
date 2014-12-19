@@ -1100,7 +1100,7 @@ std::string ReadEntireFile(FILE* file) {
   return content;
 }
 
-#if GTEST_HAS_DEATH_TEST
+#if GTEST_HAS_DEATH_TEST || GTEST_HAS_MPI
 
 static const ::std::vector<testing::internal::string>* g_injected_test_argvs =
                                         NULL;  // Owned.
@@ -1117,7 +1117,7 @@ const ::std::vector<testing::internal::string>& GetInjectableArgvs() {
   }
   return GetArgvs();
 }
-#endif  // GTEST_HAS_DEATH_TEST
+#endif  // GTEST_HAS_DEATH_TEST || GTEST_HAS_MPI
 
 #if GTEST_OS_WINDOWS_MOBILE
 namespace posix {
