@@ -5173,7 +5173,7 @@ TEST(AssertionResultTest, TriStateWorks) {
   EXPECT_EQ(true_value, (bool)r1);
   EXPECT_EQ(false_value, (bool)r2);
   EXPECT_EQ(false_value, (bool)r3);
-  EXPECT_EQ(false_value, (bool)r3);
+  EXPECT_EQ(false_value, (bool)r4);
 
   EXPECT_TRUE(r1);
   EXPECT_NONFATAL_FAILURE(EXPECT_TRUE(r2) << "expected failure", "expected failure");
