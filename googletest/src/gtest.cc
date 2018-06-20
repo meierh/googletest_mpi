@@ -1037,13 +1037,13 @@ AssertionResult AssertionResult::operator!() const {
 }
 
 // Makes a successful assertion result.
-AssertionResult AssertionSuccess() {
-  return AssertionResult(true);
+AssertionResult AssertionSuccess(bool global) {
+  return AssertionResult(true, global);
 }
 
 // Makes a failed assertion result.
-AssertionResult AssertionFailure() {
-  return AssertionResult(false);
+AssertionResult AssertionFailure(bool global) {
+  return AssertionResult(false, global);
 }
 
 // Makes a failed assertion result with the given failure message.
@@ -1343,7 +1343,8 @@ AssertionResult EqFailure(const char* lhs_expression,
                           const char* rhs_expression,
                           const std::string& lhs_value,
                           const std::string& rhs_value,
-                          bool ignoring_case) {
+                          bool ignoring_case,
+                          bool global) {
   Message msg;
   msg << "      Expected: " << lhs_expression;
   if (lhs_value != lhs_expression) {
@@ -1369,7 +1370,7 @@ AssertionResult EqFailure(const char* lhs_expression,
     }
   }
 
-  return AssertionFailure() << msg;
+  return AssertionFailure(global) << msg;
 }
 
 // Constructs a failure message for Boolean assertions such as EXPECT_TRUE.
@@ -1464,19 +1465,23 @@ namespace internal {
 
 // The helper function for {ASSERT|EXPECT}_EQ with int or enum
 // arguments.
+// If global is true and GTEST_HAS_MPI is 1
+// then the result is synchronized amongs all MPI ranks.
 AssertionResult CmpHelperEQ(const char* lhs_expression,
                             const char* rhs_expression,
                             BiggestInt lhs,
-                            BiggestInt rhs) {
+                            BiggestInt rhs,
+                            bool global = true) {
   if (lhs == rhs) {
-    return AssertionSuccess();
+    return AssertionSuccess(global);
   }
 
   return EqFailure(lhs_expression,
                    rhs_expression,
                    FormatForComparisonFailureMessage(lhs, rhs),
                    FormatForComparisonFailureMessage(rhs, lhs),
-                   false);
+                   false,
+                   global);
 }
 
 // A macro for implementing the helper functions needed to implement
@@ -1484,11 +1489,11 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
 // just to avoid copy-and-paste of similar code.
 #define GTEST_IMPL_CMP_HELPER_(op_name, op)\
 AssertionResult CmpHelper##op_name(const char* expr1, const char* expr2, \
-                                   BiggestInt val1, BiggestInt val2) {\
+                                   BiggestInt val1, BiggestInt val2, bool global) {\
   if (val1 op val2) {\
-    return AssertionSuccess();\
+    return AssertionSuccess(global);\
   } else {\
-    return AssertionFailure() \
+    return AssertionFailure(global) \
         << "Expected: (" << expr1 << ") " #op " (" << expr2\
         << "), actual: " << FormatForComparisonFailureMessage(val1, val2)\
         << " vs " << FormatForComparisonFailureMessage(val2, val1);\
@@ -1517,43 +1522,48 @@ GTEST_IMPL_CMP_HELPER_(GT, > )
 AssertionResult CmpHelperSTREQ(const char* lhs_expression,
                                const char* rhs_expression,
                                const char* lhs,
-                               const char* rhs) {
+                               const char* rhs,
+                               bool global) {
   if (String::CStringEquals(lhs, rhs)) {
-    return AssertionSuccess();
+    return AssertionSuccess(global);
   }
 
   return EqFailure(lhs_expression,
                    rhs_expression,
                    PrintToString(lhs),
                    PrintToString(rhs),
-                   false);
+                   false,
+                   global);
 }
 
 // The helper function for {ASSERT|EXPECT}_STRCASEEQ.
 AssertionResult CmpHelperSTRCASEEQ(const char* lhs_expression,
                                    const char* rhs_expression,
                                    const char* lhs,
-                                   const char* rhs) {
+                                   const char* rhs,
+                                   bool global) {
   if (String::CaseInsensitiveCStringEquals(lhs, rhs)) {
-    return AssertionSuccess();
+    return AssertionSuccess(global);
   }
 
   return EqFailure(lhs_expression,
                    rhs_expression,
                    PrintToString(lhs),
                    PrintToString(rhs),
-                   true);
+                   true,
+                   global);
 }
 
 // The helper function for {ASSERT|EXPECT}_STRNE.
 AssertionResult CmpHelperSTRNE(const char* s1_expression,
                                const char* s2_expression,
                                const char* s1,
-                               const char* s2) {
+                               const char* s2,
+                               bool global) {
   if (!String::CStringEquals(s1, s2)) {
-    return AssertionSuccess();
+    return AssertionSuccess(global);
   } else {
-    return AssertionFailure() << "Expected: (" << s1_expression << ") != ("
+    return AssertionFailure(global) << "Expected: (" << s1_expression << ") != ("
                               << s2_expression << "), actual: \""
                               << s1 << "\" vs \"" << s2 << "\"";
   }
@@ -1563,11 +1573,12 @@ AssertionResult CmpHelperSTRNE(const char* s1_expression,
 AssertionResult CmpHelperSTRCASENE(const char* s1_expression,
                                    const char* s2_expression,
                                    const char* s1,
-                                   const char* s2) {
+                                   const char* s2,
+                                   bool global) {
   if (!String::CaseInsensitiveCStringEquals(s1, s2)) {
-    return AssertionSuccess();
+    return AssertionSuccess(global);
   } else {
-    return AssertionFailure()
+    return AssertionFailure(global)
         << "Expected: (" << s1_expression << ") != ("
         << s2_expression << ") (ignoring case), actual: \""
         << s1 << "\" vs \"" << s2 << "\"";
@@ -1613,13 +1624,14 @@ template <typename StringType>
 AssertionResult IsSubstringImpl(
     bool expected_to_be_substring,
     const char* needle_expr, const char* haystack_expr,
-    const StringType& needle, const StringType& haystack) {
+    const StringType& needle, const StringType& haystack,
+    bool global = true) {
   if (IsSubstringPred(needle, haystack) == expected_to_be_substring)
-    return AssertionSuccess();
+    return AssertionSuccess(global);
 
   const bool is_wide_string = sizeof(needle[0]) > 1;
   const char* const begin_string_quote = is_wide_string ? "L\"" : "\"";
-  return AssertionFailure()
+  return AssertionFailure(global)
       << "Value of: " << needle_expr << "\n"
       << "  Actual: " << begin_string_quote << needle << "\"\n"
       << "Expected: " << (expected_to_be_substring ? "" : "not ")
@@ -1633,53 +1645,47 @@ AssertionResult IsSubstringImpl(
 // substring of haystack (NULL is considered a substring of itself
 // only), and return an appropriate error message when they fail.
 
-AssertionResult IsSubstring(
-    const char* needle_expr, const char* haystack_expr,
-    const char* needle, const char* haystack) {
-  return IsSubstringImpl(true, needle_expr, haystack_expr, needle, haystack);
+AssertionResult IsSubstring(const char* needle_expr, const char* haystack_expr,
+    const char* needle, const char* haystack, bool global) {
+  return IsSubstringImpl(true, needle_expr, haystack_expr, needle, haystack, global);
 }
 
-AssertionResult IsSubstring(
-    const char* needle_expr, const char* haystack_expr,
-    const wchar_t* needle, const wchar_t* haystack) {
-  return IsSubstringImpl(true, needle_expr, haystack_expr, needle, haystack);
+AssertionResult IsSubstring(const char* needle_expr, const char* haystack_expr,
+    const wchar_t* needle, const wchar_t* haystack, bool global) {
+  return IsSubstringImpl(true, needle_expr, haystack_expr, needle, haystack, global);
 }
 
-AssertionResult IsNotSubstring(
-    const char* needle_expr, const char* haystack_expr,
-    const char* needle, const char* haystack) {
-  return IsSubstringImpl(false, needle_expr, haystack_expr, needle, haystack);
+AssertionResult IsNotSubstring(const char* needle_expr, const char* haystack_expr,
+    const char* needle, const char* haystack, bool global) {
+  return IsSubstringImpl(false, needle_expr, haystack_expr, needle, haystack, global);
 }
 
-AssertionResult IsNotSubstring(
-    const char* needle_expr, const char* haystack_expr,
-    const wchar_t* needle, const wchar_t* haystack) {
-  return IsSubstringImpl(false, needle_expr, haystack_expr, needle, haystack);
+AssertionResult IsNotSubstring(const char* needle_expr, const char* haystack_expr,
+    const wchar_t* needle, const wchar_t* haystack, bool global) {
+  return IsSubstringImpl(false, needle_expr, haystack_expr, needle, haystack, global);
 }
 
-AssertionResult IsSubstring(
-    const char* needle_expr, const char* haystack_expr,
-    const ::std::string& needle, const ::std::string& haystack) {
-  return IsSubstringImpl(true, needle_expr, haystack_expr, needle, haystack);
+AssertionResult IsSubstring(const char* needle_expr, const char* haystack_expr,
+    const ::std::string& needle, const ::std::string& haystack, bool global) {
+  return IsSubstringImpl(true, needle_expr, haystack_expr, needle, haystack, global);
 }
 
-AssertionResult IsNotSubstring(
-    const char* needle_expr, const char* haystack_expr,
-    const ::std::string& needle, const ::std::string& haystack) {
-  return IsSubstringImpl(false, needle_expr, haystack_expr, needle, haystack);
+AssertionResult IsNotSubstring(const char* needle_expr, const char* haystack_expr,
+    const ::std::string& needle, const ::std::string& haystack, bool global) {
+  return IsSubstringImpl(false, needle_expr, haystack_expr, needle, haystack, global);
 }
 
 #if GTEST_HAS_STD_WSTRING
 AssertionResult IsSubstring(
     const char* needle_expr, const char* haystack_expr,
-    const ::std::wstring& needle, const ::std::wstring& haystack) {
-  return IsSubstringImpl(true, needle_expr, haystack_expr, needle, haystack);
+    const ::std::wstring& needle, const ::std::wstring& haystack, bool global) {
+  return IsSubstringImpl(true, needle_expr, haystack_expr, needle, haystack, global);
 }
 
 AssertionResult IsNotSubstring(
     const char* needle_expr, const char* haystack_expr,
-    const ::std::wstring& needle, const ::std::wstring& haystack) {
-  return IsSubstringImpl(false, needle_expr, haystack_expr, needle, haystack);
+    const ::std::wstring& needle, const ::std::wstring& haystack, bool global) {
+  return IsSubstringImpl(false, needle_expr, haystack_expr, needle, haystack, global);
 }
 #endif  // GTEST_HAS_STD_WSTRING
 
@@ -1899,28 +1905,31 @@ bool String::WideCStringEquals(const wchar_t * lhs, const wchar_t * rhs) {
 AssertionResult CmpHelperSTREQ(const char* lhs_expression,
                                const char* rhs_expression,
                                const wchar_t* lhs,
-                               const wchar_t* rhs) {
+                               const wchar_t* rhs,
+                               bool global) {
   if (String::WideCStringEquals(lhs, rhs)) {
-    return AssertionSuccess();
+    return AssertionSuccess(global);
   }
 
   return EqFailure(lhs_expression,
                    rhs_expression,
                    PrintToString(lhs),
                    PrintToString(rhs),
-                   false);
+                   false,
+                   global);
 }
 
 // Helper function for *_STRNE on wide strings.
 AssertionResult CmpHelperSTRNE(const char* s1_expression,
                                const char* s2_expression,
                                const wchar_t* s1,
-                               const wchar_t* s2) {
+                               const wchar_t* s2,
+                               bool global) {
   if (!String::WideCStringEquals(s1, s2)) {
-    return AssertionSuccess();
+    return AssertionSuccess(global);
   }
 
-  return AssertionFailure() << "Expected: (" << s1_expression << ") != ("
+  return AssertionFailure(global) << "Expected: (" << s1_expression << ") != ("
                             << s2_expression << "), actual: "
                             << PrintToString(s1)
                             << " vs " << PrintToString(s2);
