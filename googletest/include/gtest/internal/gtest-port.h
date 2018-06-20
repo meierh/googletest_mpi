@@ -112,6 +112,14 @@
 //                            - Define to 1 when compiling Google Test itself
 //                              as a shared library.
 
+// Enable MPI
+// To disable MPI define GTEST_HAS_MPI to 0 before
+// including this header.
+#ifndef GTEST_HAS_MPI
+#define GTEST_HAS_MPI 1
+#endif
+
+
 // Platform-indicating macros
 // --------------------------
 //
