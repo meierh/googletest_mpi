@@ -270,7 +270,7 @@ class GTEST_API_ AssertionResult {
   //
   // T must be contextually convertible to bool.
   //
-  // The second parameter prevents this overload from being considered if
+  // The third parameter prevents this overload from being considered if
   // the argument is implicitly convertible to AssertionResult. In that case
   // we want AssertionResult's copy constructor to be used.
   template <typename T>
