@@ -553,6 +553,14 @@ class GTEST_API_ TestResult {
   // Returns true iff the test passed (i.e. no test part failed).
   bool Passed() const { return !Failed(); }
 
+#if GTEST_HAS_MPI
+  // Synchronize the result of Failed() across MPI processes
+  // The return value is true if the synchronization was successful and false otherwise.
+  // This is an MPI collective operation and must be called on all processes in
+  // GTEST_MPI_COMM_WORLD
+  bool Synchronize ();
+#endif
+
   // Returns true iff the test failed.
   bool Failed() const;
 
@@ -627,6 +635,10 @@ class GTEST_API_ TestResult {
 
   // Clears the object.
   void Clear();
+
+#if GTEST_HAS_MPI
+  bool SomeProcessFailed;
+#endif
 
   // Protects mutable state of the property vector and of owned
   // properties, whose values may be updated.

@@ -2052,8 +2052,13 @@ std::string AppendUserMessage(const std::string& gtest_msg,
 
 // Creates an empty TestResult.
 TestResult::TestResult()
-    : death_test_count_(0),
-      elapsed_time_(0) {
+    :
+#if GTEST_HAS_MPI
+      SomeProcessFailed (false),
+#endif
+      death_test_count_(0),
+      elapsed_time_(0)
+{
 }
 
 // D'tor.
@@ -2203,8 +2208,38 @@ void TestResult::Clear() {
   elapsed_time_ = 0;
 }
 
+#if GTEST_HAS_MPI
+bool TestResult::Synchronize() {
+  // Communicate the result across all MPI processes
+  int local_failed_int = Failed () ? 1 : 0;
+  int global_failed_int;
+  int mpirank; MPI_Comm_rank (internal::GTEST_MPI_COMM_WORLD, &mpirank);
+  bool mpiErr;
+  // We perform an Allreduce with the logical OR operation on local_failed_int.
+  // Thus, if local_failed_int is 1 on any rank, global_result will be 1 on all ranks.
+
+  mpiErr = (MPI_Allreduce(&local_failed_int, &global_failed_int,
+            1, MPI_INT, MPI_LOR, internal::GTEST_MPI_COMM_WORLD) != MPI_SUCCESS);
+  if (mpiErr)
+  {
+      GTEST_LOG_(ERROR)
+        << "Error in MPI_Allreduce (should return MPI_SUCCESS)!";
+      return false;
+  }
+  // Store the synchronized result in the SomeProcessFailed variable
+  SomeProcessFailed = global_failed_int ? true : false;
+  return true;
+}
+#endif
+
 // Returns true iff the test failed.
 bool TestResult::Failed() const {
+#if GTEST_HAS_MPI
+  if (SomeProcessFailed) {
+      // There was a failure on a different process
+      return true;
+    }
+#endif
   for (int i = 0; i < total_part_count(); ++i) {
     if (GetTestPartResult(i).failed())
       return true;
@@ -2699,6 +2734,9 @@ void TestInfo::Run() {
       test, &Test::DeleteSelf_, "the test fixture's destructor");
 
   result_.set_elapsed_time(internal::GetTimeInMillis() - start);
+#if GTEST_HAS_MPI
+  result_.Synchronize ();
+#endif
 
   // Notifies the unit test event listener that a test has just finished.
   repeater->OnTestEnd(*this);
