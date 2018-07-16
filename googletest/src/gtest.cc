@@ -995,6 +995,21 @@ AssertionResult::AssertionResult(const AssertionResult& other)
                static_cast< ::std::string*>(NULL)) {
 }
 
+// AssertionResult constructors with possibility of synchronized result.
+// Used in EXPECT_TRUE/FALSE_MPI(assertion_result).
+AssertionResult::AssertionResult(const AssertionResult& other, bool global)
+    : success_(other.success_), globalResultsDiffer_(other.globalResultsDiffer_),
+      message_(other.message_.get() != NULL ?
+               new ::std::string(*other.message_) :
+               static_cast< ::std::string*>(NULL)) {
+#if GTEST_HAS_MPI
+  // Synchronize the Assertion result
+        if( global )
+          globalResultsDiffer_ = !boolIdenticalOnMPIprocs(success_);
+        std::cout << "Copying with value " << success_ << " and differ " << globalResultsDiffer_ << "\n";
+#endif
+}
+
 // Swaps two AssertionResults.
 void AssertionResult::swap(AssertionResult& other) {
   using std::swap;

@@ -264,6 +264,10 @@ class GTEST_API_ AssertionResult {
   // Used in EXPECT_TRUE/FALSE(assertion_result).
   AssertionResult(const AssertionResult& other);
 
+  // Copy constructor with possibility of synchronized result.
+  // Used in EXPECT_TRUE/FALSE_MPI(assertion_result).
+  AssertionResult(const AssertionResult& other, bool global);
+
   GTEST_DISABLE_MSC_WARNINGS_PUSH_(4800 /* forcing value to bool */)
 
   // Used in the EXPECT_TRUE/FALSE(bool_expression).
@@ -1924,6 +1928,25 @@ class TestWithParam : public Test, public WithParamInterface<T> {
 #define ASSERT_FALSE(condition) \
   GTEST_TEST_BOOLEAN_(!(condition), #condition, true, false, \
                       GTEST_FATAL_FAILURE_)
+
+#if GTEST_HAS_MPI
+// Boolean assertions. MPI blocking versions
+// Condition can be either a Boolean expression or an
+// AssertionResult. For more information on how to use AssertionResult with
+// these macros see comments on that class.
+#define EXPECT_TRUE_MPI(condition) \
+  GTEST_TEST_BOOLEAN_MPI_((condition), #condition, false, true, \
+                      GTEST_NONFATAL_FAILURE_)
+#define EXPECT_FALSE_MPI(condition) \
+  GTEST_TEST_BOOLEAN_MPI_(!(condition), #condition, true, false, \
+                      GTEST_NONFATAL_FAILURE_)
+#define ASSERT_TRUE_MPI(condition) \
+  GTEST_TEST_BOOLEAN_MPI_((condition), #condition, false, true, \
+                      GTEST_FATAL_FAILURE_)
+#define ASSERT_FALSE_MPI(condition) \
+  GTEST_TEST_BOOLEAN_MPI_(!(condition), #condition, true, false, \
+                      GTEST_FATAL_FAILURE_)
+#endif
 
 // Includes the auto-generated header that implements a family of
 // generic predicate assertion macros.
