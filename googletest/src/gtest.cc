@@ -1471,7 +1471,7 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
                             const char* rhs_expression,
                             BiggestInt lhs,
                             BiggestInt rhs,
-                            bool global = true) {
+                            bool global = false) {
   if (lhs == rhs) {
     return AssertionSuccess(global);
   }
@@ -1625,7 +1625,7 @@ AssertionResult IsSubstringImpl(
     bool expected_to_be_substring,
     const char* needle_expr, const char* haystack_expr,
     const StringType& needle, const StringType& haystack,
-    bool global = true) {
+    bool global = false) {
   if (IsSubstringPred(needle, haystack) == expected_to_be_substring)
     return AssertionSuccess(global);
 
