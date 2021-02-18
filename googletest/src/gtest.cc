@@ -995,6 +995,7 @@ AssertionResult::AssertionResult(const AssertionResult& other)
                static_cast< ::std::string*>(NULL)) {
 }
 
+#if GTEST_HAS_MPI
 // AssertionResult constructors with possibility of synchronized result.
 // Used in EXPECT_TRUE/FALSE_MPI(assertion_result).
 AssertionResult::AssertionResult(const AssertionResult& other, bool global)
@@ -1002,13 +1003,12 @@ AssertionResult::AssertionResult(const AssertionResult& other, bool global)
       message_(other.message_.get() != NULL ?
                new ::std::string(*other.message_) :
                static_cast< ::std::string*>(NULL)) {
-#if GTEST_HAS_MPI
   // Synchronize the Assertion result
         if( global )
           globalResultsDiffer_ = !boolIdenticalOnMPIprocs(success_);
         std::cout << "Copying with value " << success_ << " and differ " << globalResultsDiffer_ << "\n";
-#endif
 }
+#endif
 
 // Swaps two AssertionResults.
 void AssertionResult::swap(AssertionResult& other) {
@@ -1018,10 +1018,10 @@ void AssertionResult::swap(AssertionResult& other) {
   swap(message_, other.message_);
 }
 
+#if GTEST_HAS_MPI
 // checks that all MPI processes have the same v
 bool AssertionResult::boolIdenticalOnMPIprocs(bool v)
 {
-#if GTEST_HAS_MPI
   int localSuccess = v;
   int globalAndV, globalOrV;
   bool mpiErr = false;
@@ -1037,10 +1037,7 @@ bool AssertionResult::boolIdenticalOnMPIprocs(bool v)
   {
     return globalAndV == globalOrV;
   }
-#else
-  return true;
 #endif
-}
 
 // Returns the assertion's negation. Used with EXPECT/ASSERT_FALSE.
 AssertionResult AssertionResult::operator!() const {
