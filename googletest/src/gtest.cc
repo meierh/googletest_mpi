@@ -1006,7 +1006,6 @@ AssertionResult::AssertionResult(const AssertionResult& other, bool global)
   // Synchronize the Assertion result
         if( global )
           globalResultsDiffer_ = !boolIdenticalOnMPIprocs(success_);
-        std::cout << "Copying with value " << success_ << " and differ " << globalResultsDiffer_ << "\n";
 }
 #endif
 
