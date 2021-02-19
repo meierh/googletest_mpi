@@ -83,7 +83,7 @@
 //   GTEST_HAS_PTHREAD        - Define it to 1/0 to indicate that <pthread.h>
 //                              is/isn't available.
 //   GTEST_HAS_MPI            - Define it to 1/0 to indicate that <mpi.h>
-//                              is/isn't available.
+//                              is/isn't available. Defined in "gtest/internal/gtest-mpi.h"
 //   GTEST_HAS_RTTI           - Define it to 1/0 to indicate that RTTI is/isn't
 //                              enabled.
 //   GTEST_HAS_STD_WSTRING    - Define it to 1/0 to indicate that
@@ -111,14 +111,6 @@
 //   GTEST_CREATE_SHARED_LIBRARY
 //                            - Define to 1 when compiling Google Test itself
 //                              as a shared library.
-
-// Enable MPI
-// To disable MPI define GTEST_HAS_MPI to 0 before
-// including this header.
-#ifndef GTEST_HAS_MPI
-#define GTEST_HAS_MPI 1
-#endif
-
 
 // Platform-indicating macros
 // --------------------------
@@ -266,13 +258,11 @@
 //   Int32FromGTestEnv()  - parses an Int32 environment variable.
 //   StringFromGTestEnv() - parses a string environment variable.
 
-#if GTEST_HAS_MPI
 // gtest-port.h guarantees to #include <mpi.h> when GTEST_HAS_MPI is
 // true.
 // Some MPI vendors require this include to be the *first* include
 // (e.g. before system headers!)
-#include <mpi.h> //NOLINT
-#endif
+#include "gtest/internal/gtest-mpi.h" //NOLINT
 
 #include <ctype.h>   // for isspace, etc
 #include <stddef.h>  // for ptrdiff_t
