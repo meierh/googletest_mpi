@@ -1036,6 +1036,7 @@ bool AssertionResult::boolIdenticalOnMPIprocs(bool v)
   {
     return globalAndV == globalOrV;
   }
+}
 #endif
 
 // Returns the assertion's negation. Used with EXPECT/ASSERT_FALSE.
