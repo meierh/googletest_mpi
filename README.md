@@ -1,3 +1,17 @@
+# GoogleTest_MPI
+
+This repository collects the MPI extensions to the Googletes library as developed at
+the DLR institute for Software technology.
+
+Currently, all functionality is implemented in the branches [feature/mpi_nonblocking_expect](https://github.com/DLR-SC/googletest_mpi/tree/feature/mpi_nonblocking_expect) and [main_mpi](https://github.com/DLR-SC/googletest_mpi/tree/main_mpi).
+
+The implementations are based on version 1.8.0 and will be rebased to the current version soon.
+
+For an introduction on how to use Google test with MPI, see:
+[MPIGuide.md](https://github.com/DLR-SC/googletest_mpi/blob/feature/mpi_nonblocking_expect/googletest/docs/MPIGuide.md)
+
+The remainder of this file is the original README of GoogleTest.
+
 # GoogleTest
 
 #### OSS Builds Status
