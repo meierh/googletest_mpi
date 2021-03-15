@@ -1,6 +1,6 @@
 # GoogleTest_MPI
 
-This repository collects the MPI extensions to the Googletes library as developed at
+This repository collects the MPI extensions to the Googletest library as developed at
 the DLR institute for Software technology.
 
 Currently, all functionality is implemented in the branches [feature/mpi_nonblocking_expect](https://github.com/DLR-SC/googletest_mpi/tree/feature/mpi_nonblocking_expect) and [main_mpi](https://github.com/DLR-SC/googletest_mpi/tree/main_mpi).
