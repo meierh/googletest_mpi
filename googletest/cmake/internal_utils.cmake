@@ -205,7 +205,7 @@ function(cxx_library_with_type name type cxx_flags)
   endif()
   if(NOT gtest_disable_mpi)
     target_include_directories(${name} PUBLIC ${MPI_INCLUDE_PATH})
-    target_link_libraries(${name} ${MPI_LIBRARIES})
+    target_link_libraries(${name} PUBLIC ${MPI_LIBRARIES})
   endif()
 endfunction()
 
