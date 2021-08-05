@@ -307,16 +307,17 @@ class GTEST_API_ AssertionResult {
   // the assertion is true and others where it is false.
   template <typename T>
   explicit AssertionResult(
-      const T& success, bool global = false
+      const T& success, bool global = false,
       typename std::enable_if<
           !std::is_convertible<T, AssertionResult>::value>::type*
       /*enabler*/
       = nullptr)
-      : success_(success), globalResultsDiffer_(false) {}
+      : success_(success), globalResultsDiffer_(false) {
 #if GTEST_HAS_MPI
         if( global )
           globalResultsDiffer_ = !boolIdenticalOnMPIprocs(success_);
 #endif
+      }
 
 #if defined(_MSC_VER) && _MSC_VER < 1910
   GTEST_DISABLE_MSC_WARNINGS_POP_()
@@ -1614,8 +1615,8 @@ class EqHelper {
   static AssertionResult Compare(
       const char* lhs_expression, const char* rhs_expression,
       // Handle cases where '0' is used as a null pointer literal.
-      std::nullptr_t /* lhs */, T* rhs
-      bool global = false,) {
+      std::nullptr_t /* lhs */, T* rhs,
+      bool global = false) {
     // We already know that 'lhs' is a null pointer.
     return CmpHelperEQ(lhs_expression, rhs_expression, static_cast<T*>(nullptr),
                        rhs, global);
@@ -2131,7 +2132,7 @@ class TestWithParam : public Test, public WithParamInterface<T> {
 #if GTEST_HAS_MPI
 #define EXPECT_EQ_MPI(val1, val2) \
   EXPECT_PRED_FORMAT2_MPI(::testing::internal:: \
-                      EqHelper<GTEST_IS_NULL_LITERAL_(val1)>::Compare, \
+                      EqHelper::Compare, \
                       val1, val2)
 #define EXPECT_NE_MPI(val1, val2) \
   EXPECT_PRED_FORMAT2_MPI(::testing::internal::CmpHelperNE, val1, val2)
@@ -2162,7 +2163,7 @@ class TestWithParam : public Test, public WithParamInterface<T> {
 #if GTEST_HAS_MPI
 #define GTEST_ASSERT_EQ_MPI(val1, val2) \
   ASSERT_PRED_FORMAT2_MPI(::testing::internal:: \
-                      EqHelper<GTEST_IS_NULL_LITERAL_(val1)>::Compare, \
+                      EqHelper::Compare, \
                       val1, val2)
 #define GTEST_ASSERT_NE_MPI(val1, val2) \
   ASSERT_PRED_FORMAT2_MPI(::testing::internal::CmpHelperNE, val1, val2)

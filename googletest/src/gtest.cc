@@ -3956,7 +3956,7 @@ void XmlUnitTestResultPrinter::PrintXmlTestSuite(std::ostream* stream,
 #if GTEST_HAS_MPI
   int nprocs = 0;
   MPI_Comm_size(GTEST_MPI_COMM_WORLD, &nprocs);
-  const std::string full_test_suite_name = test_suite.name()+"_np"+String::FormatInt(nprocs)+"."+test_case.name();
+  const std::string full_test_suite_name = test_suite.name()+std::string("_np")+std::to_string(nprocs);
 #else
   const std::string full_test_suite_name = test_suite.name();
 #endif                                                   
@@ -4607,7 +4607,7 @@ class ScopedPrematureExitFile {
  public:
   explicit ScopedPrematureExitFile(const char* premature_exit_filepath)
       : premature_exit_filepath_(premature_exit_filepath ?
-                                 premature_exit_filepath : "", rank_(0)) {
+                                 premature_exit_filepath : ""), rank_(0) {
 #if GTEST_HAS_MPI
     // We need to verify that MPI was initialized here...
     if (GTestIsInitialized()) {
@@ -6149,6 +6149,7 @@ void LoadFlagsFromFile(const std::string& path) {
   if (!flagfile) {
     GTEST_LOG_(FATAL) << "Unable to open file \"" << GTEST_FLAG(flagfile)
                       << "\"";
+  }
 #if GTEST_HAS_MPI
   }
   // broadcast data because view on file system might be inconsistant

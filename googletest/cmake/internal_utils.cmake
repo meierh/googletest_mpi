@@ -274,16 +274,17 @@ function(cxx_test_with_flags name cxx_flags libs)
   else()
     add_test(NAME ${name}
       COMMAND "$<TARGET_FILE:${name}>")
+  endif()
 
   # add mpi variants of this tests
   if(NOT gtest_disable_mpi)
     foreach(np 1 2 3 6)
-      if (WIN32 OR MINGW)
-        # TODO: Abort here or add correct Win command
-      else()
+      if (NOT (WIN32 OR MINGW))
         add_test("${name}_np${np}" 
           COMMAND "${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${name} ${MPIEXEC_POSTFLAGS}")
         set_tests_properties("${name}_np${np}" PROPERTIES TIMEOUT 60)
+      # TODO: Else (if WIN32 OR MINGW) add correct MPI call command or abort  
+      endif()
     endforeach()
 
   endif()
