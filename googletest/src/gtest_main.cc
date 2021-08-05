@@ -32,9 +32,18 @@
 #include <mpi.h>
 #endif // GTEST_HAS_MPI
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "gtest/gtest.h"
+
+#ifdef ARDUINO
+void setup() {
+  testing::InitGoogleTest();
+}
+
+void loop() { RUN_ALL_TESTS(); }
+
+#else
 
 GTEST_API_ int main(int argc, char **argv) {
 #if GTEST_HAS_MPI
@@ -45,7 +54,7 @@ GTEST_API_ int main(int argc, char **argv) {
     return 1;
   }
 #endif
-  printf("Running main() from gtest_main.cc\n");
+  printf("Running main() from %s\n", __FILE__);
   testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();
 #if GTEST_HAS_MPI
@@ -58,3 +67,4 @@ GTEST_API_ int main(int argc, char **argv) {
   // Warning: this return value may get lost when executed with MPI
   return result;
 }
+#endif
