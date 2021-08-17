@@ -374,7 +374,7 @@ class GTEST_API_ AssertionResult {
 
   // Stores result of the assertion predicate.
   bool success_;
-  // Used tom mark different results on different processes as failure
+  // Used to mark different results on different processes as failure
   bool globalResultsDiffer_;
   // Stores the message describing the condition in case the expectation
   // construct is not satisfied with the predicate's outcome.
