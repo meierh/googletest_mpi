@@ -2249,13 +2249,6 @@ std::string String::FormatInt(int value) {
   return ss.str();
 }
 
-// Formats an int value as "%d".
-std::string String::FormatInt(int value) {
-  std::stringstream ss;
-  ss << value;
-  return ss.str();
-}
-
 // Formats an int value as "%X".
 std::string String::FormatHexUInt32(uint32_t value) {
   std::stringstream ss;

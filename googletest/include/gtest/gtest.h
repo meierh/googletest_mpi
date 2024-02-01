@@ -1662,9 +1662,6 @@ AssertionResult CmpHelper##op_name(const char* expr1, const char* expr2, \
     return CmpHelperOpFailure(expr1, expr2, val1, val2, #op, global);\
   }\
 }\
-GTEST_API_ AssertionResult CmpHelper##op_name(\
-    const char* expr1, const char* expr2, BiggestInt val1, BiggestInt val2, bool global = false)
-}
 
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 
