@@ -70,7 +70,10 @@ macro(config_compiler_and_linker)
 
   if(NOT gtest_disable_mpi)
     # Defines MPI_COMPILE_FLAGS, MPI_INCLUDE_PATH, MPI_LINK_FLAGS and MPI_LIBRARIES
-    find_package(MPI)
+    #find_package(MPI)
+    set(MPI_INC "/opt/intel/oneapi/mpi/latest/include")
+    set(MPI_LIB "/opt/intel/oneapi/mpi/latest/lib/libmpi.so")
+    include_directories(SYSTEM ${MPI_INC})
     set(cxx_base_flags, "${cxx_base_flags} -DGTEST_HAS_MPI=1")
   else()
     set(cxx_base_flags, "${cxx_base_flags} -DGTEST_HAS_MPI=0")
